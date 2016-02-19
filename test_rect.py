@@ -62,9 +62,13 @@ if __name__ == "__main__":
 		#adject depth data
         blurred = cv2.GaussianBlur(depth, (5, 5), 0)
         thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]	
+        ( cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours( crop_frame, cnts, -1, (255,0,255), 5 )
+        #cv2.imshow('con',con_thresh )
+
         boolean = np.equal(thresh[0:100,0:100],255)
         if(np.sum(boolean) > 5000):
-            cv2.rectangle(crop_frame,(2,2),(102,102),(0,255,0),5)
+            cv2.rectangle(crop_frame,(2,2),(102,102),(0,255,0),3)
         else:
             state = 0
 
@@ -103,7 +107,7 @@ if __name__ == "__main__":
         #cv2.namedWindow("RGB image", cv2.WND_PROP_FULLSCREEN)
         #cv2.setWindowProperty("RGB image", cv2.WND_PROP_FULLSCREEN, cv2.cv.CV_WINDOW_FULLSCREEN)
         cv2.imshow('RGB image',crop_frame)
-        #cv2.imshow('depth img',thresh )
+        cv2.imshow('depth img',thresh )
         # quit program when 'esc' key is pressed
         k = cv2.waitKey(5) & 0xFF
         if k == 27:
