@@ -11,6 +11,8 @@ zoomx = 1.13
 a = 0
 state = 0
 state_rect = "rect1"
+start_x = 2
+staet_y = 2
 rectx = 2
 recty = 2
 rectw = 100
@@ -36,8 +38,7 @@ def get_depth():
 def check_opencv_version(major, lib=None):
     # if the supplied library is None, import OpenCV
     if lib is None:
-        import cv2 as lib
-        
+        import cv2 as lib        
 
     # return whether or not the current OpenCV version matches the
     # major version number
