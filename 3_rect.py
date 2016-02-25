@@ -8,14 +8,12 @@ current_depth = 650
 adj = 8
 zoomy = 1.1
 zoomx = 1.13
-a = 0
-state = 0
-state_rect = "rect1"
-start_x = 2
-staet_y = 2
+state_rect = "start_rect"
+state_num = "start_num"
+rectxy = [[2,2],[102,2],[202,2]]
 rectw = 100
 recth = 100
-rectd = 100
+number_rect = 0
 check_rect = rectw*recth/2
 sum_boolean = 0
 # Create a detector with the parameters
@@ -35,6 +33,7 @@ def get_depth():
     return array
 
 def rgb_change_size():
+    #resize and crop
     frame = get_video()
     frame=cv2.flip(frame,1)
     big_frame = cv2.resize(frame,(0,0), fx=zoomx, fy=zoomy)
@@ -55,74 +54,57 @@ def draw_contours(frame,depth):
     cv2.drawContours( frame, cnts, -1, (255,0,255), 5 )
     return frame
 
-def check_boolean(thresh):
+def check_boolean(thresh,rectx,recty):
     boolean = np.equal(thresh[recty:(recty+recth),rectx:(rectx+rectw)],255)
     return np.sum(boolean)
 
 def draw_rect(frame,depth):
-    # draw rect 1st if touch change color
-    #if touch more than 1s go to state rect2
-    if(state_rect == "rect1"):
-        rectx = start_x 
-        recty = start_y
-        sum_boolean =  check_boolean(depth)          
+    global number_rect
+    global state_rect
+    global start_time
+    rectx = rectxy[number_rect][0]
+    recty = rectxy[number_rect][1]
+    sum_boolean =  check_boolean(depth,rectx,recty) 
+    if(state_rect == "start_rect"):
+        #print("asd")
         if(sum_boolean > check_rect):
             cv2.rectangle(frame,(rectx,recty),(rectx+rectw,rectx+recth),(0,255,0),3)
             if(time.time() - start_time >= 1) :
-                state_rect = "rect2"
+                number_rect = number_rect+1
+                if(number_rect < len(rectxy)):
+                    state_rect = "draw_rect"
+                else:
+                    number_rect = 0
+                    state_rect = "end_rect"
         else:
             cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
             start_time = time.time()
 
-    # draw rect 2nd if touch and go to state check_rect2
-    #if not touch more than 3s reset state
-    elif(state_rect == "rect2"):
-        rectx = rectx + rectd
-        #recty = start_y
-        sum_boolean =  check_boolean(depth)         
+    elif(state_rect == "draw_rect"):
         cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
-        if(time.time() - start_time >= 3):            
-            state_rect = "rect1"
-        elif(sum_boolean > check_rect):
-            start_time = time.time()
-            state_rect = "check_rect2"
-
-    # rect 2nd change color 
-    #if touch more than 1s go to state rect3
-    #if not touch reset state
-    elif(state_rect == "check_rect2"):
-        sum_boolean =  check_boolean(depth)  
-        cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
-        if(time.time() - start_time >= 1):           
-            state_rect = "rect3"
-        elif(not(sum_boolean > check_rect)):
-            state_rect = "rect1"
-
-    # draw rect 3rd if touch and go to state check_rect3
-    #if not touch more than 3s reset state
-    elif(state_rect == "rect3"):
-        rectx = rectx + rectd
-        #recty = 2
-        sum_boolean =  check_boolean(depth)           
-        cv2.rectangle(crop_frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
         if(time.time() - start_time >= 3):
-            state_rect = "rect1"
+            number_rect = 0        
+            state_rect = "start_rect"
         elif(sum_boolean > check_rect):
             start_time = time.time()
-            state_rect = "check_rect3"
+            state_rect = "check_rect"
 
-    # rect 3rd change color 
-    #if touch more than 1s go to state rect1
-    #if not touch reset state
-    elif(state_rect == "check_rect3"):
-        sum_boolean =  check_boolean(depth)  
+    elif(state_rect == "check_rect"):
         cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
         if(time.time() - start_time >= 1):
-            state_rect = "rect1"
+            number_rect = number_rect+1
+            if(number_rect < len(rectxy)):         
+                state_rect = "draw_rect"
+            else:
+                number_rect = 0
+                state_rect = "end_rect"
         elif(not(sum_boolean > check_rect)):
-            state_rect = "rect1"
+            number_rect = 0
+            state_rect = "start_rect"
     return frame
 
+def draw_num(frame,depth):
+    global state_num
     
 
 
@@ -131,7 +113,7 @@ if __name__ == "__main__":
         crop_frame = rgb_change_size()
         #get a frame from depth sensor
 		#adject depth data
-        thresh = threshold_depth()
+        thresh = adject_depth()
         
         #draw contours
         contours_frame = draw_contours(crop_frame,thresh)
