@@ -8,7 +8,6 @@ current_depth = 650
 adj = 8
 zoomy = 1.1
 zoomx = 1.13
-a = 0
 state = 0
 state_rect = "rect1"
 start_x = 2

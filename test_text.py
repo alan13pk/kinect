@@ -182,10 +182,13 @@ def capVidio():
     #frame=cv2.flip(image,1)
     #big_frame = cv2.resize(frame,(0,0), fx=zoomx, fy=zoomy)
     #crop_frame = big_frame[480*(zoomx-1)/2:480+480*(zoomx-1)/2,640*(zoomy-1)/2:640+640*(zoomy-1)/2]
-    name = time.strftime("%d_%b_%Y_%H_%M_%S")
+    name = time.strftime("%d_%m_%Y_%H_%M_%S")
     name = "/home/ubuntu/kinect_test/pic/"+name+".jpg"
     #cv2.imwrite(name,crop_frame)
     cv2.imwrite(name,image)
+    order = "/home/ubuntu/kinect_test/submit.py "+name
+    os.system(order)
+    time.sleep(1)
 
 
 if __name__ == "__main__":
