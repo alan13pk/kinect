@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import time
 from random import randint
-import os
+import os, sys
 threshold = 100
 current_depth = 650
 adj = 8
@@ -182,8 +182,8 @@ def capVidio():
     #cv2.imwrite(name,crop_frame)
     print 'save file: %s' % name
     cv2.imwrite(name,image)
-    #order = "submit.py "+name
-    #os.system(order)
+    order = sys.path[0]+"/submit.py "+name
+    os.system(order)
     print 'submit photo...'
     time.sleep(1)
 
