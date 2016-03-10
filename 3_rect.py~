@@ -204,7 +204,7 @@ if __name__ == "__main__":
         rect_frame = draw_num(rect_frame,thresh)
 
         cv2.namedWindow("RGB image", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("RGB image", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.setWindowProperty("RGB image", cv2.WND_PROP_FULLSCREEN, cv2.CV_WINDOW_FULLSCREEN)
 
         cv2.imshow('RGB image',rect_frame)
         #cv2.imshow('depth img',thresh )
