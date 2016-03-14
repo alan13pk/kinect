@@ -24,8 +24,10 @@ stop_rectxy = [200,300]
 count_down = 5
 start_time = 0
 # Create a detector with the parameters
-ver = (cv2.__version__).split('.')
+#ver = (cv2.__version__).split('.')
 #print ver
+ver = (cv2.__version__).split('.')
+cap = cv2.VideoCapture(0)
 
 def random_number():
     global rectxy 
@@ -68,6 +70,7 @@ def adject_depth():
 
 def draw_contours(frame,depth):
     ( cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    #(_, cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours( frame, cnts, -1, (255,0,255), 5 )
     return frame
 
@@ -178,16 +181,11 @@ def draw_num(frame,depth):
     return frame
 
 def capVidio():
-    cap = cv2.VideoCapture(1)
-    value,image = cap.read()
+    #cap = cv2.VideoCapture(1)
+    #value,image = cap.read()
     time.sleep(1)
-    #image = get_video()
-    #frame=cv2.flip(image,1)
-    #big_frame = cv2.resize(frame,(0,0), fx=zoomx, fy=zoomy)
-    #crop_frame = big_frame[480*(zoomx-1)/2:480+480*(zoomx-1)/2,640*(zoomy-1)/2:640+640*(zoomy-1)/2]
     name = time.strftime("%d_%m_%Y_%H_%M_%S")
     name = "/home/ubuntu/kinect_test/pic/"+name+".jpg"
-    #cv2.imwrite(name,crop_frame)
     cv2.imwrite(name,image)
     order = "/home/ubuntu/kinect_test/submit.py "+name
     os.system(order)
@@ -196,6 +194,7 @@ def capVidio():
 
 if __name__ == "__main__":
     while 1:
+        value,image = cap.read()
         crop_frame = rgb_change_size()
         #get a frame from depth sensor
 		#adject depth data
