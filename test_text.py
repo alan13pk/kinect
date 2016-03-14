@@ -15,6 +15,8 @@ text = "SNAP"
 rectxy = [[randint(2,102),randint(2,302)],[randint(102,302),randint(2,302)],[randint(302,402),randint(2,302)],[randint(402,502),randint(2,302)]]
 rectw = 65
 recth = 80
+resetxy = [100,300]
+resetwh = [rectw*5,recth]
 number_rect = 0
 check_rect = rectw*recth*2/5
 sum_boolean = 0
@@ -69,7 +71,7 @@ def draw_contours(frame,depth):
     cv2.drawContours( frame, cnts, -1, (255,0,255), 5 )
     return frame
 
-def check_boolean(thresh,rectx,recty):
+def check_boolean(thresh,rectx,recty,rectw,recth):
     boolean = np.equal(thresh[recty:(recty+recth),rectx:(rectx+rectw)],255)
     return np.sum(boolean)
 
@@ -81,7 +83,7 @@ def draw_rect(frame,depth):
     global rectxy
     rectx = rectxy[number_rect][0]
     recty = rectxy[number_rect][1]
-    sum_boolean =  check_boolean(depth,rectx,recty) 
+    sum_boolean =  check_boolean(depth,rectx,recty,rectw,recth) 
     if(state_rect == "start_rect"):
         if(sum_boolean > check_rect):
             #cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
@@ -146,9 +148,10 @@ def draw_num(frame,depth):
     global count_down
     rectx = stop_rectxy[0]
     recty = stop_rectxy[1]
-    sum_boolean =  check_boolean(depth,rectx,recty) 
+    sum_boolean =  check_boolean(depth,resetxy[0],resetxy[1],resetwh[0],resetwh[1]) 
     if(state_num == "start_num"):
-        cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
+        #cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
+        cv2.putText(crop_frame,"RESET", (resetxy[0],resetxy[1]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
         cv2.putText(crop_frame,str(count_down), (300,200), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,255),5)
         if(sum_boolean > check_rect):
             start_time = time.time()
@@ -163,8 +166,8 @@ def draw_num(frame,depth):
                 capVidio()
                 start_time = time.time()
     elif(state_num == "check_reset"):
-        cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
-        cv2.putText(crop_frame,"RESET", (300,200), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
+        #cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
+        cv2.putText(crop_frame,"RESET", (resetxy[0],resetxy[1]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
         count_down = 5
         if(sum_boolean > check_rect):
             if(time.time() - start_time >= 1):
