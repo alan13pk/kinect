@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import time
 from random import randint
-import os
+import os, sys
 threshold = 100
 current_depth = 650
 adj = 8
@@ -67,7 +67,8 @@ def adject_depth():
     return thresh
 
 def draw_contours(frame,depth):
-    ( _, cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    #( cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    (_, cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours( frame, cnts, -1, (255,0,255), 5 )
     return frame
 
@@ -177,11 +178,11 @@ def capVidio():
     # value,image = cap.read()
     time.sleep(1)
     name = time.strftime("%d_%m_%Y_%H_%M_%S")
-    name = "/home/ubuntu/kinect_test/pic/"+name+".jpg"
+    name = "pic/"+name+".jpg"
     #cv2.imwrite(name,crop_frame)
     print 'save file: %s' % name
     cv2.imwrite(name,image)
-    order = "/home/ubuntu/kinect_test/submit.py "+name
+    order = sys.path[0]+"/submit.py "+name
     os.system(order)
     print 'submit photo...'
     time.sleep(1)
