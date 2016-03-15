@@ -35,6 +35,7 @@ start_time  = 0
 image       = None
 hand_img = cv2.resize(cv2.imread("hand.png",-1),(0,0), fx=0.4, fy=0.5)
 photo_img = cv2.imread("camera.png",-1)
+photo_img = cv2.resize(photo_img,(0,0), fx=0.7, fy=0.7)
 x_img = cv2.imread("x.png",-1)
 
 ver = (cv2.__version__).split('.')
@@ -140,19 +141,19 @@ def state_pic(frame,depth):
     elif(state == "check_reset"):
         rectx = resetxy[0]
         recty = resetxy[1]
-        rectw = resetwh[0]
-        recth = resetwh[1]
         cv2.putText(crop_frame,"RESET", (300,200), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
-        cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
+        cv2.rectangle(frame,(rectx,recty),(rectx+resetwh[0],recty+resetwh[1]),(0,255,0),3)
         frame = insert_img(frame,x_img,ximgxy[0],ximgxy[1])
         state = reset(depth)
+    return frame
 
 def shuter(depth):
+    global start_time
     global number_rect
     global rectxy
     rectx = rectxy[number_rect][0]
     recty = rectxy[number_rect][1]
-    sum_boolean =  check_boolean(depth,rectx,recty)
+    sum_boolean =  check_boolean(depth,rectx,recty,rectw,recth)
     if(time.time() - start_time >= 3):
         number_rect = 0
         random_number()
@@ -163,10 +164,12 @@ def shuter(depth):
     return "shuter"
 
 def check(depth):
+    global start_time
     global number_rect
     global rectxy
     rectx = rectxy[number_rect][0]
     recty = rectxy[number_rect][1]
+    sum_boolean =  check_boolean(depth,rectx,recty,rectw,recth)
     if(time.time() - start_time >= 0.5):
         number_rect = number_rect+1
         if(number_rect < len(rectxy)): 
@@ -187,7 +190,7 @@ def count_num(depth):
     global start_time
     rectx = resetxy[0]
     recty = resetxy[1]
-    sum_boolean =  check_boolean(depth,rectx,recty)
+    sum_boolean =  check_boolean(depth,rectx,recty,90,90)
     if(sum_boolean > check_rect):
         count_down = 5
         start_time = time.time()
@@ -205,11 +208,13 @@ def count_num(depth):
     return "count_down"
 
 def reset(depth):
+    global start_time
     rectx = resetxy[0]
     recty = resetxy[1]
-    sum_boolean =  check_boolean(depth,rectx,recty) 
+    sum_boolean =  check_boolean(depth,rectx,recty,90,90)
     if(sum_boolean > check_rect):
         if(time.time() - start_time >= 1):
+            ser.write('ready\n')
             return "shuter"
     else:
         return "count_down"
@@ -217,33 +222,33 @@ def reset(depth):
 
 
 def capVideo():
-	global image, ser
+    global image, ser
 
-	p = subprocess.Popen(["espeak", "-s", "100", "-g", "0.9", "-v", "en-us+f3", 'capture'])
+    p = subprocess.Popen(["espeak", "-s", "100", "-g", "0.9", "-v", "en-us+f3", 'capture'])
 
-	ser.write('capture\n')
-	line = ser.readline()
-	print line
+    ser.write('capture\n')
+    line = ser.readline()
+    print line
 
-	name = time.strftime("%d_%m_%Y_%H_%M_%S")
-	name = "pic/"+name+".jpg"
+    name = time.strftime("%d_%m_%Y_%H_%M_%S")
+    name = "pic/"+name+".jpg"
 
-	#cv2.imwrite(name,crop_frame)
-	print 'save file: %s' % name
-	cv2.imwrite(name,image)
-	cmd_save = "./submit.py "+name
-	os.system(cmd_save)
+    #cv2.imwrite(name,crop_frame)
+    print 'save file: %s' % name
+    cv2.imwrite(name,image)
+    cmd_save = "./submit.py "+name
+    os.system(cmd_save)
 
-	print 'submit photo to server...'
-	time.sleep(1)
-	ser.write('ready\n')
-	line = ser.readline()
-	print line
+    print 'submit photo to server...'
+    time.sleep(1)
+    ser.write('ready\n')
+    line = ser.readline()
+    print line
         if p != None:
-	    p.terminate()
+        p.terminate()
 
 def speak(word):
-	pass
+    pass
 
 
 if __name__ == "__main__":
@@ -252,27 +257,27 @@ if __name__ == "__main__":
 
         window_title = 'Photo Capture'
 
-	while 1:
-		value,image = cap.read()       # read the next image from camera
-		crop_frame = rgb_change_size() # resize the image
-		thresh = adject_depth()        # get an image from the depth camera 
-		
-		# draw contours
-		contours_frame = draw_contours(crop_frame,thresh)
+    while 1:
+        value,image = cap.read()       # read the next image from camera
+        crop_frame = rgb_change_size() # resize the image
+        thresh = adject_depth()        # get an image from the depth camera 
+        
+        # draw contours
+        contours_frame = draw_contours(crop_frame,thresh)
 
-		rect_frame = state_piccontours_frame,thresh)
+        rect_frame = state_pic(contours_frame,thresh)
 
-		cv2.namedWindow( window_title, cv2.WND_PROP_FULLSCREEN)
-		cv2.setWindowProperty( window_title, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.namedWindow( window_title, cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty( window_title, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-		cv2.imshow( window_title, rect_frame )
-		#cv2.imshow('depth img',thresh )
+        cv2.imshow( window_title, rect_frame)
+        #cv2.imshow('depth img',thresh )
 
-		# quit program when 'esc' key is pressed
-		k = cv2.waitKey(5) & 0xFF
-		if k == 27:
-			#cv2.imwrite("test_write.jpg", frame)
-			cv2.destroyAllWindows()
-			break
+        # quit program when 'esc' key is pressed
+        k = cv2.waitKey(5) & 0xFF
+        if k == 27:
+            #cv2.imwrite("test_write.jpg", frame)
+            cv2.destroyAllWindows()
+            break
 
 #########################################################################
