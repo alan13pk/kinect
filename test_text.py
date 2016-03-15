@@ -69,8 +69,8 @@ def adject_depth():
     return thresh
 
 def draw_contours(frame,depth):
-    ( cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    #(_, cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    #( cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    (_, cnts, _) = cv2.findContours(depth.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours( frame, cnts, -1, (255,0,255), 5 )
     return frame
 
@@ -86,7 +86,9 @@ def draw_rect(frame,depth):
     global rectxy
     rectx = rectxy[number_rect][0]
     recty = rectxy[number_rect][1]
-    sum_boolean =  check_boolean(depth,rectx,recty,rectw,recth) 
+    sum_boolean =  check_boolean(depth,rectx,recty,rectw,recth)
+    s = "catch ["+text[number_rect,len(text)-1]+"]"
+    cv2.putText(crop_frame,s, (100,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0),5)
     if(state_rect == "start_rect"):
         if(sum_boolean > check_rect):
             #cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
@@ -152,6 +154,7 @@ def draw_num(frame,depth):
     rectx = stop_rectxy[0]
     recty = stop_rectxy[1]
     sum_boolean =  check_boolean(depth,resetxy[0],resetxy[1],resetwh[0],resetwh[1]) 
+    save_frame = frame
     if(state_num == "start_num"):
         #cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
         cv2.putText(crop_frame,"RESET", (resetxy[0],resetxy[1]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
@@ -166,8 +169,12 @@ def draw_num(frame,depth):
                 count_down = 5
                 state_rect = "start_rect"
                 state_num = "stop_num"
+                s_img = cv2.imread("1457960617_camera.png")
+                x_offset=y_offset=50
+                save_frame[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
                 capVidio()
                 start_time = time.time()
+                return save_frame
     elif(state_num == "check_reset"):
         #cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
         cv2.putText(crop_frame,"RESET", (resetxy[0],resetxy[1]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
