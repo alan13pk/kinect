@@ -25,8 +25,10 @@ rectw       = 65
 recth       = 80
 resetxy = [50,50]
 resetwh = [90,90]
-photoxy = [100,100]
+photoxy = [0,0]
+photowh = [640,480]
 ximgxy =  [resetxy[0]+7,resetxy[1]-17]
+#ximgxy =  [resetxy[0]+7,resetxy[1]-7]
 number_rect = 0
 check_rect  = rectw*recth*2/5
 sum_boolean = 0
@@ -35,8 +37,9 @@ start_time  = 0
 image       = None
 hand_img = cv2.resize(cv2.imread("hand.png",-1),(0,0), fx=0.4, fy=0.5)
 photo_img = cv2.imread("camera.png",-1)
-photo_img = cv2.resize(photo_img,(0,0), fx=0.7, fy=0.7)
+photo_img = cv2.resize(photo_img,(0,0), fx=0.3, fy=0.3)
 x_img = cv2.imread("x.png",-1)
+#x_img = v2.resize(cv2.imread("back.png",-1),(0,0), fx=0.6, fy=0.8)
 
 ver = (cv2.__version__).split('.')
 cap = cv2.VideoCapture(0)         # open /dev/video0
@@ -97,14 +100,12 @@ def draw_contours(frame,depth):
     cv2.drawContours( frame, cnts, -1, (255,0,255), 5 )
     return frame
 
-#def check_boolean(thresh,rectx,recty):
-#    boolean = np.equal(thresh[recty:(recty+recth),rectx:(rectx+rectw)],255)
-#    return np.sum(boolean)
-
+#count white area
 def check_boolean(thresh,rectx,recty,rectw,recth):
     boolean = np.equal(thresh[recty:(recty+recth),rectx:(rectx+rectw)],255)
     return np.sum(boolean)
 
+# insert small image in big image
 def insert_img(frame,s_img,x_offset,y_offset):
     for c in range(0,3):
         frame[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1], c] =  s_img[:,:,c] * (s_img[:,:,3]/255.0) +  frame[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1], c] * (1.0 - s_img[:,:,3]/255.0)
@@ -119,28 +120,36 @@ def state_pic(frame,depth):
     rectx = rectxy[number_rect][0]
     recty = rectxy[number_rect][1]
     if(state == "idel"):
+        # picture in idel
         frame = insert_img(frame,photo_img,photoxy[0],photoxy[1])
-        sum_boolean =  check_boolean(depth,0,0,640,480)
+        sum_boolean =  check_boolean(depth,photoxy[0],photoxy[1],photowh[0],photoxy[1])
         if(sum_boolean > check_rect):
             state = "shuter"
             start_time = time.time()
     elif(state == "shuter"):
+        #picture hand when no touch
         cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,0,255),3)
         frame = insert_img(frame,hand_img,rectx+5,recty+10)
+        #number hand
         cv2.putText(frame,str(number_rect+1), (rectx+25,recty+recth-15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255),3)
         state = shuter(depth)
     elif(state == "check_touch"):
+        #picture hand when touch
         cv2.rectangle(frame,(rectx,recty),(rectx+rectw,recty+recth),(0,255,0),3)
         frame = insert_img(frame,hand_img,rectx+5,recty+10)
+        #number hand
         cv2.putText(frame,str(number_rect+1), (rectx+25,recty+recth-15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0),3)
         state = check(depth)
     elif(state == "count_down"):
+        #show number countdown
         cv2.putText(frame,str(count_down), (300,200), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,255),5)
+        #picture reset 
         frame = insert_img(frame,x_img,ximgxy[0],ximgxy[1])
         state = count_num(depth)
     elif(state == "check_reset"):
         rectx = resetxy[0]
         recty = resetxy[1]
+        #picture reset when touch
         cv2.putText(crop_frame,"RESET", (300,200), cv2.FONT_HERSHEY_SIMPLEX, 3, (0,0,255),3)
         cv2.rectangle(frame,(rectx,recty),(rectx+resetwh[0],recty+resetwh[1]),(0,255,0),3)
         frame = insert_img(frame,x_img,ximgxy[0],ximgxy[1])
